@@ -2070,7 +2070,7 @@ OK2"""
         ),
         Test(
             "compiletime start and stop some thread",
-            """
+            "".join("""
                 thread nostack {;
                     while True{;
                         print: "A";
@@ -2088,7 +2088,7 @@ OK2"""
                 for .j in |0|10|1| {;
                     print: .j + '0';
                 }
-            """ * 10,
+            """.replace(".j", f".j{i}").replace(".i", f".i{i}") for i in range(10)),
             output="A0A1A2A3A4A5A6A7A8A9AASTOP THREAD0123456789" * 10
         ),
         # checkversion
