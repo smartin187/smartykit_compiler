@@ -61,7 +61,7 @@ class OutputError(TestError):
 
 class Test:
     """This class is for testing all functionalities of smart."""
-    def __init__(self, name:str, code:str, output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:str="", max_op:int=10000, no_log:bool=False):
+    def __init__(self, name:str, code:str, output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:str="", max_op:int=10000, no_log:bool=False, auto_confirm:bool=False):
         """
         Set information about test.
         """
@@ -74,6 +74,7 @@ class Test:
         self.stdin_test = stdin_test
         self.max_op = max_op
         self.no_log = no_log
+        self.auto_confirm = auto_confirm
 
     def show_test(self, start_compilation:bool=True) -> None:
         """Print the detail of test"""
@@ -86,6 +87,14 @@ class Test:
 
             sep="\n"
         )
+
+    def switch_stdin(self) -> None:
+        """If the auto confrim is True, set the classique stdin."""
+        if self.auto_confirm:
+            print(f"{Colors.YELLOW}Switch stdin file... Can cause errors...{Colors.RESET}")
+            sys.stdin.close()
+            sys.stdin = self.sauv_stdin
+            os.remove("auto_confirm.txt")
 
 
     def run(self) -> None:
@@ -112,7 +121,19 @@ class Test:
             )
 
         try:
+            if self.auto_confirm:
+                print(f"{Colors.YELLOW}Switch stdin file... Can cause errors...{Colors.RESET}")
+
+                with open("auto_confirm.txt", "w") as f:
+                    f.write("n\n" * 100)
+
+                self.sauv_stdin = sys.stdin
+                sys.stdin = open("auto_confirm.txt", "r")
+
             self.code_compile = compile_smart("test/test.sma", make_file=False, thread_mode = [False, "", False, False], first_call=True)
+
+            self.switch_stdin()
+
 
             if "  " in self.code_compile:
                 raise OutputError(f"{Colors.RED}Double space on output. Risk of error with address counting...{Colors.RESET}")
@@ -122,15 +143,18 @@ class Test:
                     raise OutputError(f"The output of compilation is not good:\n{self.code_compile}")
 
         except SmartError as se:
+            self.switch_stdin()
             error = True
             compilation_error = True
             error_output = str(se)
 
         except Exception as e:
+            self.switch_stdin()
             error = True
             error_output = "Smart Emulator error: " + str(e)
 
         else:
+
             if not self.compile_only:
                 try:
                     output = smart_emulator.start_test(self.code_compile, self.max_op, stdin=self.stdin_test)
@@ -2241,6 +2265,15 @@ OK2"""
             sucess=False
         ),
         # checkversion
+        Test(
+            "Compiletime checkversion fail",
+            code="""
+                compiletime checkversion 9999.9.9;
+                print: "ERROR";
+            """,
+            auto_confirm=True,
+            sucess=False
+        ),
         Test(
             "Compiletime checkversion error 1",
             code="""
