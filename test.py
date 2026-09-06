@@ -1806,7 +1806,6 @@ try:
                     print: ~string;
                     print: .x + .a;
                     print: .a + 65;
-
                 }
 
                 f: 'A', "STRING", 1;
@@ -2581,24 +2580,24 @@ OK2"""
         Test(
             "Call a function with long time",  # this test have probleme
             code="""
-                //void f{;
-                //    for .i in |0|10|1| {;
-                //        print: 'A';
-                //    }
-                //}
-                //void g{;
-                //    for .i in |0|10|1| {;
-                //        print: 'B';
-                //    }
-                //}
+                void f{;
+                    for .i in |0|10|1| {;
+                        print: 'A';
+                    }
+                }
+                void g{;
+                    for .i in |0|10|1| {;
+                        print: 'B';
+                   }
+                }
 
-                //thread stack{;
-                //    f:;
-                //}
+                thread stack{;
+                    f:;
+                }
 
-                //g:;
+                g:;
             """,
-            output="error" # this test have probleme
+            output="A" * 10 + "B" * 10 # this test have probleme
         ),
         # --- error ---
         Test(
