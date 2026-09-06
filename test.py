@@ -1679,15 +1679,15 @@ try:
                         void readkeys: *~line, .end {;
                             .counter = 0;
                             while .counter != 21 {;
-                            ~line[.counter] = input:;
+                                ~line[.counter] = input:;
 
-                            if ~line[.counter] == .end {;
-                                break;
+                                if ~line[.counter] == .end {;
+                                    break;
+                                }
+
+                                .counter++;
                             }
-
-                            .counter++;
                         }
-                    }
                     """
                )
            ],
