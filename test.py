@@ -171,8 +171,8 @@ class Test:
 
 class ModuleTest(Test):
     """This class is for testing a Smart code with some modules (in different files)."""
-    def __init__(self, name:str, code_modules:list[tuple[str, str]], output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True):
-        super().__init__(name, code_modules[0][1], output, compile_output, compile_only, sucess)
+    def __init__(self, name:str, code_modules:list[tuple[str, str]], output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:int=10000):
+        super().__init__(name, code_modules[0][1], output, compile_output, compile_only, sucess, stdin_test)
 
         self.code_modules = code_modules[1:]    # get all modules except main module
 
@@ -1616,41 +1616,42 @@ try:
             ],
             output="FUNCTION MODULEASTRING"
         ),
-        #ModuleTest(
-        #    "Function with variable on module - 2", # on this test, press only A
-        #    code_modules=[
-        #        (
-        #            "test.sma",
-        #            """
-        #                import "test/readkeys.sma";
-        #                ~str = "STRING";
-#
- #                       readkeys: ~str, False;
-#
- #                       print: ~str;
-#
-  #                  """
-   #             ),
-    #            (
-     #               "readkeys.sma",
-      #              """
-       #                 void readkeys: *~line, .end {;
-        #                .counter = 0;
-         #               while .counter != 20 {;
-          #                  ~line[.counter] = input:;
-#
- #                           if ~line[.counter] == .end {;
-  #                              break;
-   #                         }
-#
- #                           .counter++;
-  #                      }
-   #                 }
-    #                """
-     #           )
-      #      ],
-       #     output="A" * 21
-        #)
+        ModuleTest(
+            "Function with variable on module - 2", # on this test, press only A
+            code_modules=[
+                (
+                    "test.sma",
+                   """
+                       import "test/readkeys.sma";
+                       ~str = "STRING";
+
+                       readkeys: ~str, False;
+
+                       print: ~str;
+
+                   """
+               ),
+               (
+                   "readkeys.sma",
+                   """
+                       void readkeys: *~line, .end {;
+                       .counter = 0;
+                       while .counter != 21 {;
+                           ~line[.counter] = input:;
+
+                           if ~line[.counter] == .end {;
+                               break;
+                           }
+
+                           .counter++;
+                       }
+                   }
+                   """
+               )
+           ],
+           output="A" * 21,
+           stdin_test="A" * 21
+        )
 
         #ModuleTest(    # uncomment for set the test. But this test have a long output
         #    "Self import test",
