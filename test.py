@@ -4,8 +4,6 @@ This programme is for test all functionalities of smart.
 """
 import os
 import traceback
-import threading
-import time
 import sys
 import logging
 from pathlib import Path
@@ -124,6 +122,18 @@ class Test:
 
                     if output != self.output:
                         raise OutputError(f"The output of programme is not good:\n{output}")
+
+                except smart_emulator.EmulatorStdinError as e:
+                    print(f"{Colors.RED}The programm try to read on entry but the entry is end.{Colors.RESET}\n{Colors.MAGENTA}It caused by too call to input function...{Colors.RESET}")
+
+                    error = True
+                    error_output = str(e)
+
+                except smart_emulator.EmulatorMaxOPError as e:
+                    print(f"{Colors.RED}The programm exeded the max operation limit ({self.max_op}).{Colors.RESET}\n{Colors.MAGENTA}It can be caused by an infinite loop...{Colors.RESET}")
+
+                    error = True
+                    error_output = str(e)
 
                 except TimeoutError as e:
                     print(str(e))

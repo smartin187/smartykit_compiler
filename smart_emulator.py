@@ -775,6 +775,18 @@ BASE_FLAGS = {
 
 flags = dict(BASE_FLAGS)
 
+class EmulatorError(Exception):
+    """Errro about the emulator, used by test.py"""
+    pass
+
+class EmulatorStdinError(EmulatorError):
+    """Error when try to read a character on given stdin for test but the stdin is end."""
+    pass
+
+class EmulatorMaxOPError(EmulatorError):
+    """Error when the maximum number of operations is reached. By default: 10000"""
+    pass
+
 def error_during_run() -> None:
     """Print an error message on the monitor."""
     print_on_text("\nError occurred during run...", True, True)
@@ -853,7 +865,7 @@ def run_smart() -> None:
         if max_op_run:
             op_run += 1
             if op_run >= max_op_run:
-                raise Exception("Maximum operation run reached.")
+                raise EmulatorMaxOPError("Maximum operation run reached.")
 
         if stop_run:
             break
@@ -900,7 +912,7 @@ def run_smart() -> None:
                     stdin_6502["read"] += 1
 
                 except IndexError:
-                    raise Exception("stdin end.")
+                    raise EmulatorStdinError("stdin end error")
 
             run_step += 7
 
