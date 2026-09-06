@@ -60,7 +60,7 @@ class OutputError(TestError):
 
 class Test:
     """This class is for testing all functionalities of smart."""
-    def __init__(self, name:str, code:str, output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:str="", max_op:int=10000):
+    def __init__(self, name:str, code:str, output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:str="", max_op:int=10000, no_log:bool=False):
         """
         Set information about test.
         """
@@ -72,6 +72,8 @@ class Test:
         self.sucess = sucess
         self.stdin_test = stdin_test
         self.max_op = max_op
+        self.no_log = no_log
+
     def show_test(self, start_compilation:bool=True) -> None:
         """Print the detail of test"""
         print(
@@ -99,6 +101,14 @@ class Test:
         error = False
         error_output = ""
         compilation_error = False
+
+        if self.no_log:
+            logging.basicConfig(
+                format="SmartCompiller %(levelname)s: %(message)s",
+                level=logging.CRITICAL,
+                stream=sys.stdout,
+                force=True
+            )
 
         try:
             self.code_compile = compile_smart("test/test.sma", make_file=False, thread_mode = [False, "", False, False], first_call=True)
@@ -173,10 +183,13 @@ class Test:
 
             print(f"{ERASE_PROGRESSBAR}{TEST_OK}{Colors.BG_GREEN}Test OK{Colors.RESET}", end="\n"*10)
 
+        if self.no_log:   # set the original log
+            config_log()
+
 class ModuleTest(Test):
     """This class is for testing a Smart code with some modules (in different files)."""
-    def __init__(self, name:str, code_modules:list[tuple[str, str]], output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:int=10000):
-        super().__init__(name, code_modules[0][1], output, compile_output, compile_only, sucess, stdin_test)
+    def __init__(self, name:str, code_modules:list[tuple[str, str]], output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:int=10000, no_log:bool=False):
+        super().__init__(name, code_modules[0][1], output, compile_output, compile_only, sucess, stdin_test, no_log)
 
         self.code_modules = code_modules[1:]    # get all modules except main module
 
@@ -1655,18 +1668,19 @@ try:
            ],
            output="A" * 21,
            stdin_test="A" * 21
-        )
+        ),
 
-        #ModuleTest(    # uncomment for set the test. But this test have a long output
-        #    "Self import test",
-        #    code_modules=[
-        #        (
-        #            "test.sma",
-        #            'import "test/test.sma";'
-        #        )
-        #    ],
-        #    sucess=False
-        #)
+        ModuleTest(
+            "Self import test",
+            code_modules=[
+                (
+                   "test.sma",
+                   'import "test/test.sma";'
+               )
+           ],
+           sucess=False,
+           no_log=True
+        )
     )
 
     FUNCTION_TEST = (
