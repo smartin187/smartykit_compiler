@@ -907,6 +907,9 @@ def compile_smart(
         else:
             adress_var += 1
 
+        if var_name in smart_var:
+            raise SmartError(f"Variable '{var_name}' already exist. You can't name a new object with this name.")
+
         smart_var[var_name] = var_obj
 
         if adress_var >= compiller_data_run.MAX_VARIABLE_CREATED + compiller_data_run.START_ADRESS_VAR:
