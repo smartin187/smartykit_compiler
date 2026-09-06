@@ -2810,7 +2810,7 @@ OK2"""
             output="1HELLOANEW STRING@"
         ),
         Test(
-            "Recurcive pointer",
+            "Recurcive pointer - 1",
             code="""
                 void f1: *.arg1{;
                     .arg1 = 'A';
@@ -2824,6 +2824,22 @@ OK2"""
                 print: .a;
             """,
             output="A"
+        ),
+        Test(
+            "Recurcive pointer - 2",
+            code="""
+                void f1: *~arg1{;
+                    ~arg1 = "FUNCTION1";
+                }
+                void f2: *~arg2{;
+                    f1: ~arg2;
+                }
+
+                ~string = "STRING";
+                f2: ~string;
+                print: ~string;
+            """,
+            output="FUNCTION1"
         ),
         # --- error ---
         Test(

@@ -25,7 +25,6 @@ If the task is a bug you can also add an issue on GitHub.
 - On math, add parentheses `(1+2)*3`
 - On the library input, add new features: set a readline with print character, add a clear string (clear the string when the end is `\r` for exemple) on end mode...
 - On string library, add count, replace, in...
-- Test: add test for recurcive function with arg on ptr for str value
 - Fix: if a ptr function call anthoer ptr function with the same argument named, error
 - Add new test with using timeout: while True test... And add option for when the time is out, the output is given and test if the output is correct
 - Add a `compiletime checkversion x.y.z`: the minimum vertion needed for compile.
