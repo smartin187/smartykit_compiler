@@ -1360,6 +1360,16 @@ try:
                 }
             """,
             sucess=False
+        ),
+        Test(
+            "Variable on for loop already exist",
+            code="""
+                .i = 0;
+                for .i in |0|10|1| {;
+                    print: "ERROR";
+                }
+            """,
+            sucess=False
         )
     )
 
@@ -1919,6 +1929,19 @@ try:
                 void f: error {;
                     print: "ERROR";
                 }
+            """,
+            sucess=False
+        ),
+        Test(
+            "Parameter of function with smae name as variable error",
+            code="""
+                .a = 0;
+
+                void f: .a {;
+                    print: "ERROR";
+                }
+
+                print: "ERROR";
             """,
             sucess=False
         )
@@ -2919,6 +2942,21 @@ OK2"""
                     print: "ERROR";
                 }
                 f: 0, "HELLO";
+            """,
+            sucess=False
+        ),
+        Test(
+            "2 ptr argument with same name error",
+            code="""
+                void f: *.x {;
+                    .x = 'A';
+                }
+
+                void g: *.x {;
+                    f: .x;
+                    print: "ERROR";
+                }
+                print: "ERROR";
             """,
             sucess=False
         )
