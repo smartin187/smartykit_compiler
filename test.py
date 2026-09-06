@@ -11,22 +11,26 @@ from pathlib import Path
 from compiller_tool.import_tool import PATH_LIB
 from compiller_tool.string_tool import SMART_KEYWORD
 
-if "--compile-debug" in sys.argv:
-    sys.argv.remove("--compile-debug")
+def config_log() -> None:
+    """Set the logging.basicConfig"""
+    if "--compile-debug" in sys.argv:
+        sys.argv.remove("--compile-debug")
 
-    logging.basicConfig(
-        format="SmartCompiller %(levelname)s: %(message)s",
-        level=logging.INFO,
-        stream=sys.stdout,  # for redirecting the output
-        force=True
-    )
-else:
-    logging.basicConfig(
-        format="SmartCompiller %(levelname)s: %(message)s",
-        level=logging.WARNING,
-        stream=sys.stdout,
-        force=True
-    )
+        logging.basicConfig(
+            format="SmartCompiller %(levelname)s: %(message)s",
+            level=logging.INFO,
+            stream=sys.stdout,  # for redirecting the output
+            force=True
+        )
+    else:
+        logging.basicConfig(
+            format="SmartCompiller %(levelname)s: %(message)s",
+            level=logging.WARNING,
+            stream=sys.stdout,
+            force=True
+        )
+
+config_log()
 
 import smart_emulator
 from smart_compiller import compile_smart
