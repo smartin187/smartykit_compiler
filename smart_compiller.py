@@ -1713,7 +1713,7 @@ def compile_smart(
                             compiller_data_run.not_used_ram += 1
                             make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i + compiller_data_run.not_used_ram}")
 
-                        #compiller_data_run.not_used_ram += 1
+                        compiller_data_run.not_used_ram += 1
 
                     else:
                         smart_error(f"Expected a variable name, not '{parameter}'")
