@@ -28,3 +28,5 @@ If the task is a bug you can also add an issue on GitHub.
 - Test: add test for recurcive function with arg on ptr for str value
 - Fix: if a ptr function call anthoer ptr function with the same argument named, error
 - Add new test with using timeout: while True test... And add option for when the time is out, the output is given and test if the output is correct
+- Add a `compiletime checkversion x.y.z`: the minimum vertion needed for compile.
+- On `make_variable` function, add a control if the var already exist: raise SmartError.
