@@ -10,6 +10,7 @@ from pathlib import Path
 
 from compiller_tool.import_tool import PATH_LIB
 from compiller_tool.string_tool import SMART_KEYWORD
+from compiller_tool.smart_info import SMART_VERSION
 
 def config_log() -> None:
     """Set the logging.basicConfig"""
@@ -2066,6 +2067,23 @@ OK2"""
             """ * 10,
             output="A0A1A2A3A4A5A6A7A8A9AASTOP THREAD0123456789" * 10
         ),
+        # checkversion
+        Test(
+            "Compiletime checkversion v0.0.0",
+            code="""
+                compiletime checkversion 0.0.0;
+                print: "OK";
+            """,
+            output="OK"
+        ),
+        Test(
+            "Compiletime checkversion current",
+            code=f"""
+                compiletime checkversion {SMART_VERSION[1:]};
+                print: "OK";
+            """,
+            output="OK"
+        ),
         # ---- error ----
         Test(
             "Expected keyword after compiletime",
@@ -2219,6 +2237,23 @@ OK2"""
             code="""
                 print: "ERROR";
                 compiletime killthread;
+            """,
+            sucess=False
+        ),
+        # checkversion
+        Test(
+            "Compiletime checkversion error 1",
+            code="""
+                compiletime checkversion;
+                print: "ERROR";
+            """,
+            sucess=False
+        ),
+        Test(
+            "Compiletime checkversion error 2",
+            code="""
+                compiletime checkversion a.b.c;
+                print: "ERROR";
             """,
             sucess=False
         )

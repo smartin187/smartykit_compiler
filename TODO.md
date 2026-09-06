@@ -29,3 +29,4 @@ If the task is a bug you can also add an issue on GitHub.
 - Add new test with using timeout: while True test... And add option for when the time is out, the output is given and test if the output is correct
 - Add a `compiletime checkversion x.y.z`: the minimum vertion needed for compile.
 - On `make_variable` function, add a control if the var already exist: raise SmartError.
+- For compiletime checkversion, add a test who the version is band and the auto test press automaticly 'n' on the question
