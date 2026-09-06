@@ -1004,7 +1004,7 @@ def compile_smart(
     else:
         smart_var = smart_var_module
 
-    adress_var = compiller_data_run.START_ADRESS_VAR + len(smart_var) # esce que les notusedram sont bien mis pour l'appèle de fonction ?
+    adress_var = compiller_data_run.START_ADRESS_VAR + len(smart_var)
 
     line_counter = 0
 
@@ -1209,7 +1209,8 @@ def compile_smart(
                     smart_error(f"Used index in undefined variable: `{var_name}`")
 
                 make_variable(smart_obj.SmartStr(var_name, adress_var), add_adress_advenced_value=False)
-                #adress_var += 1
+
+                compiller_data_run.not_used_ram += 1
 
                 for i in range(smart_obj.SIZE_ADVANCED_OBJ - 1):
                     compiller_data_run.not_used_ram += 1
