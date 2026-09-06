@@ -1277,10 +1277,11 @@ def compile_smart(
 
             jump_line = bloc_line - line_counter - 1
 
-            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAMCallElse{compiller_data_run.not_used_call_else}")
             compiller_data_run.not_used_call_else += 1
+            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAMCallElse{compiller_data_run.not_used_call_else}")
 
-            call_else_adress = adress_for_RAM(get_variable(f"NotUsedRAMCallElse{compiller_data_run.not_used_call_else - 1}", special_name=True).adress) + " "
+
+            call_else_adress = adress_for_RAM(get_variable(f"NotUsedRAMCallElse{compiller_data_run.not_used_call_else}", special_name=True).adress) + " "
 
             adress_var += 1
 
