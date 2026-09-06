@@ -1210,7 +1210,7 @@ def compile_smart(
 
                 make_variable(smart_obj.SmartStr(var_name, adress_var), add_adress_advenced_value=False)
 
-                compiller_data_run.not_used_ram += 1
+                #compiller_data_run.not_used_ram += 1
 
                 for i in range(smart_obj.SIZE_ADVANCED_OBJ - 1):
                     compiller_data_run.not_used_ram += 1
@@ -1706,9 +1706,13 @@ def compile_smart(
                         make_variable(parameter_obj, add_adress_advenced_value=False)
                         parameters_obj.append(parameter_obj)
 
+                        #compiller_data_run.not_used_ram += 1
+
                         for i in range(smart_obj.SIZE_ADVANCED_OBJ - 1):
-                            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i + compiller_data_run.not_used_ram}")
                             compiller_data_run.not_used_ram += 1
+                            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i + compiller_data_run.not_used_ram}")
+
+                        #compiller_data_run.not_used_ram += 1
 
                     else:
                         smart_error(f"Expected a variable name, not '{parameter}'")
