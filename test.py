@@ -4,8 +4,6 @@ This programme is for test all functionalities of smart.
 """
 import os
 import traceback
-import threading
-import time
 import sys
 import logging
 from pathlib import Path
@@ -13,22 +11,26 @@ from pathlib import Path
 from compiller_tool.import_tool import PATH_LIB
 from compiller_tool.string_tool import SMART_KEYWORD
 
-if "--compile-debug" in sys.argv:
-    sys.argv.remove("--compile-debug")
+def config_log() -> None:
+    """Set the logging.basicConfig"""
+    if "--compile-debug" in sys.argv:
+        sys.argv.remove("--compile-debug")
 
-    logging.basicConfig(
-        format="SmartCompiller %(levelname)s: %(message)s",
-        level=logging.INFO,
-        stream=sys.stdout,  # for redirecting the output
-        force=True
-    )
-else:
-    logging.basicConfig(
-        format="SmartCompiller %(levelname)s: %(message)s",
-        level=logging.WARNING,
-        stream=sys.stdout,
-        force=True
-    )
+        logging.basicConfig(
+            format="SmartCompiller %(levelname)s: %(message)s",
+            level=logging.INFO,
+            stream=sys.stdout,  # for redirecting the output
+            force=True
+        )
+    else:
+        logging.basicConfig(
+            format="SmartCompiller %(levelname)s: %(message)s",
+            level=logging.WARNING,
+            stream=sys.stdout,
+            force=True
+        )
+
+config_log()
 
 import smart_emulator
 from smart_compiller import compile_smart
@@ -56,39 +58,11 @@ class OutputError(TestError):
     """If the output of programme are not good."""
     pass
 
-class TimeOut:
-    """For the time out on test. Helpful on while or goto."""
-    def __init__(self, timeout:int):
-        """Start the timeout, with a `timeout` in second.
-        raise a TimeoutError if time is out."""
-        self.timeout = timeout
-
-        self.actual_time = 0
-        self.end = False
-
-        self.timer = threading.Thread(target=self.control_time, daemon=True)
-        self.timer.start()
-
-    def control_time(self):
-        """Check if the time is out."""
-        while not self.end:
-            if self.actual_time >= self.timeout:
-                time_out_error = f"{Colors.RED}Time out on test. Test take too long : have {self.timeout}s max but use {self.actual_time}s.{Colors.RESET}"
-
-                input(f"{time_out_error}\n{Colors.BG_YELLOW}Need to stop test... Press enter or Ctrl+C for quit...")
-
-                sys.exit(1)
-
-                #raise TimeoutError(time_out_error)
-            self.actual_time += 1
-
-            time.sleep(1)
-
 class Test:
     """This class is for testing all functionalities of smart."""
-    def __init__(self, name:str, code:str, output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, timeout:int=-1):
+    def __init__(self, name:str, code:str, output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:str="", max_op:int=10000, no_log:bool=False):
         """
-        timeout : if -1 no time out, else time out in second.
+        Set information about test.
         """
         self.name = name
         self.code = code
@@ -96,7 +70,9 @@ class Test:
         self.output = output + "\n\nEnd of run"
         self.compile_output = compile_output
         self.sucess = sucess
-        self.timeout = timeout
+        self.stdin_test = stdin_test
+        self.max_op = max_op
+        self.no_log = no_log
 
     def show_test(self, start_compilation:bool=True) -> None:
         """Print the detail of test"""
@@ -126,6 +102,14 @@ class Test:
         error_output = ""
         compilation_error = False
 
+        if self.no_log:
+            logging.basicConfig(
+                format="SmartCompiller %(levelname)s: %(message)s",
+                level=logging.CRITICAL,
+                stream=sys.stdout,
+                force=True
+            )
+
         try:
             self.code_compile = compile_smart("test/test.sma", make_file=False, thread_mode = [False, "", False, False], first_call=True)
 
@@ -148,15 +132,22 @@ class Test:
         else:
             if not self.compile_only:
                 try:
-                    if self.timeout != -1:
-                        time_out = TimeOut(self.timeout)
-                    output = smart_emulator.start_test(self.code_compile)
-
-                    if self.timeout != -1:
-                        time_out.end = True
+                    output = smart_emulator.start_test(self.code_compile, self.max_op, stdin=self.stdin_test)
 
                     if output != self.output:
                         raise OutputError(f"The output of programme is not good:\n{output}")
+
+                except smart_emulator.EmulatorStdinError as e:
+                    print(f"{Colors.RED}The programm try to read on entry but the entry is end.{Colors.RESET}\n{Colors.MAGENTA}It caused by too call to input function...{Colors.RESET}")
+
+                    error = True
+                    error_output = str(e)
+
+                except smart_emulator.EmulatorMaxOPError as e:
+                    print(f"{Colors.RED}The programm exeded the max operation limit ({self.max_op}).{Colors.RESET}\n{Colors.MAGENTA}It can be caused by an infinite loop...{Colors.RESET}")
+
+                    error = True
+                    error_output = str(e)
 
                 except TimeoutError as e:
                     print(str(e))
@@ -192,10 +183,13 @@ class Test:
 
             print(f"{ERASE_PROGRESSBAR}{TEST_OK}{Colors.BG_GREEN}Test OK{Colors.RESET}", end="\n"*10)
 
+        if self.no_log:   # set the original log
+            config_log()
+
 class ModuleTest(Test):
     """This class is for testing a Smart code with some modules (in different files)."""
-    def __init__(self, name:str, code_modules:list[tuple[str, str]], output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True):
-        super().__init__(name, code_modules[0][1], output, compile_output, compile_only, sucess)
+    def __init__(self, name:str, code_modules:list[tuple[str, str]], output:str="", compile_output:str="", compile_only:bool=False, sucess:bool=True, stdin_test:int=10000, no_log:bool=False):
+        super().__init__(name, code_modules[0][1], output, compile_output, compile_only, sucess, stdin_test, no_log)
 
         self.code_modules = code_modules[1:]    # get all modules except main module
 
@@ -219,6 +213,8 @@ class ModuleTest(Test):
 
 LIB_PATH = {
     "screen_tool": ("smart_lib/screen_tool/screen_tool.sma",),
+    "string": ("smart_lib/string/convert.sma",),
+    "input": ("smart_lib/input/readkeys.sma",)
 }
 
 def control_lib() -> bool:
@@ -311,13 +307,14 @@ try:
 
                     print: ~my_string;
 
+                    ~my_string = ""; // reset the string
 
                     // read while the caracter is not '\r' or 21 was read:
                     readkeys: ~my_string, '\r';
                     print: ~my_string;
                 """,
-                compile_output="0400: 4C 8B 04 A9 00 8D 16 03 AD 16 03 C9 14 F0 04 A9 01 D0 02 A9 00 C9 00 D0 03 4C 79 04 AD 16 03 AA C9 15 90 0A A9 45 20 EF FF A9 49 4C 85 04 20 7A 04 8D 17 03 AD 17 03 9D 00 03 8D 31 00 AD 16 03 AA C9 15 90 0A A9 45 20 EF FF A9 49 4C 85 04 BD 00 03 CD 15 03 D0 04 A9 01 D0 02 A9 00 C9 00 D0 08 A9 01 8D 18 03 4C 6F 04 A9 00 8D 18 03 4C 79 04 AE 16 03 E8 8E 16 03 4C 06 04 60 AD 11 D0 10 FB AD 10 D0 29 7F 60 20 EF FF 00 A9 00 8D 19 03 A9 00 8D 1A 03 A9 00 8D 1B 03 A9 00 8D 1C 03 A9 00 8D 1D 03 A9 00 8D 1E 03 A9 00 8D 1F 03 A9 00 8D 20 03 A9 00 8D 21 03 A9 00 8D 22 03 A9 00 8D 23 03 A9 00 8D 24 03 A9 00 8D 25 03 A9 00 8D 26 03 A9 00 8D 27 03 A9 00 8D 28 03 A9 00 8D 29 03 A9 00 8D 2A 03 A9 00 8D 2B 03 A9 00 8D 2C 03 A9 00 8D 2D 03 AD 19 03 8D 00 03 AD 1A 03 8D 01 03 AD 1B 03 8D 02 03 AD 1C 03 8D 03 03 AD 1D 03 8D 04 03 AD 1E 03 8D 05 03 AD 1F 03 8D 06 03 AD 20 03 8D 07 03 AD 21 03 8D 08 03 AD 22 03 8D 09 03 AD 23 03 8D 0A 03 AD 24 03 8D 0B 03 AD 25 03 8D 0C 03 AD 26 03 8D 0D 03 AD 27 03 8D 0E 03 AD 28 03 8D 0F 03 AD 29 03 8D 10 03 AD 2A 03 8D 11 03 AD 2B 03 8D 12 03 AD 2C 03 8D 13 03 AD 2D 03 8D 14 03 A9 00 8D 15 03 20 F5 08 AD 00 03 8D 19 03 AD 01 03 8D 1A 03 AD 02 03 8D 1B 03 AD 03 03 8D 1C 03 AD 04 03 8D 1D 03 AD 05 03 8D 1E 03 AD 06 03 8D 1F 03 AD 07 03 8D 20 03 AD 08 03 8D 21 03 AD 09 03 8D 22 03 AD 0A 03 8D 23 03 AD 0B 03 8D 24 03 AD 0C 03 8D 25 03 AD 0D 03 8D 26 03 AD 0E 03 8D 27 03 AD 0F 03 8D 28 03 AD 10 03 8D 29 03 AD 11 03 8D 2A 03 AD 12 03 8D 2B 03 AD 13 03 8D 2C 03 AD 14 03 8D 2D 03 AD 19 03 8D 03 00 AD 1A 03 8D 04 00 AD 1B 03 8D 05 00 AD 1C 03 8D 06 00 AD 1D 03 8D 07 00 AD 1E 03 8D 08 00 AD 1F 03 8D 09 00 AD 20 03 8D 0A 00 AD 21 03 8D 0B 00 AD 22 03 8D 0C 00 AD 23 03 8D 0D 00 AD 24 03 8D 0E 00 AD 25 03 8D 0F 00 AD 26 03 8D 10 00 AD 27 03 8D 11 00 AD 28 03 8D 12 00 AD 29 03 8D 13 00 AD 2A 03 8D 14 00 AD 2B 03 8D 15 00 AD 2C 03 8D 16 00 AD 2D 03 8D 17 00 AD 03 00 20 EF FF AD 04 00 20 EF FF AD 05 00 20 EF FF AD 06 00 20 EF FF AD 07 00 20 EF FF AD 08 00 20 EF FF AD 09 00 20 EF FF AD 0A 00 20 EF FF AD 0B 00 20 EF FF AD 0C 00 20 EF FF AD 0D 00 20 EF FF AD 0E 00 20 EF FF AD 0F 00 20 EF FF AD 10 00 20 EF FF AD 11 00 20 EF FF AD 12 00 20 EF FF AD 13 00 20 EF FF AD 14 00 20 EF FF AD 15 00 20 EF FF AD 16 00 20 EF FF AD 17 00 20 EF FF AD 19 03 8D 00 03 AD 1A 03 8D 01 03 AD 1B 03 8D 02 03 AD 1C 03 8D 03 03 AD 1D 03 8D 04 03 AD 1E 03 8D 05 03 AD 1F 03 8D 06 03 AD 20 03 8D 07 03 AD 21 03 8D 08 03 AD 22 03 8D 09 03 AD 23 03 8D 0A 03 AD 24 03 8D 0B 03 AD 25 03 8D 0C 03 AD 26 03 8D 0D 03 AD 27 03 8D 0E 03 AD 28 03 8D 0F 03 AD 29 03 8D 10 03 AD 2A 03 8D 11 03 AD 2B 03 8D 12 03 AD 2C 03 8D 13 03 AD 2D 03 8D 14 03 A9 0D 8D 15 03 20 F5 08 AD 00 03 8D 19 03 AD 01 03 8D 1A 03 AD 02 03 8D 1B 03 AD 03 03 8D 1C 03 AD 04 03 8D 1D 03 AD 05 03 8D 1E 03 AD 06 03 8D 1F 03 AD 07 03 8D 20 03 AD 08 03 8D 21 03 AD 09 03 8D 22 03 AD 0A 03 8D 23 03 AD 0B 03 8D 24 03 AD 0C 03 8D 25 03 AD 0D 03 8D 26 03 AD 0E 03 8D 27 03 AD 0F 03 8D 28 03 AD 10 03 8D 29 03 AD 11 03 8D 2A 03 AD 12 03 8D 2B 03 AD 13 03 8D 2C 03 AD 14 03 8D 2D 03 AD 19 03 8D 03 00 AD 1A 03 8D 04 00 AD 1B 03 8D 05 00 AD 1C 03 8D 06 00 AD 1D 03 8D 07 00 AD 1E 03 8D 08 00 AD 1F 03 8D 09 00 AD 20 03 8D 0A 00 AD 21 03 8D 0B 00 AD 22 03 8D 0C 00 AD 23 03 8D 0D 00 AD 24 03 8D 0E 00 AD 25 03 8D 0F 00 AD 26 03 8D 10 00 AD 27 03 8D 11 00 AD 28 03 8D 12 00 AD 29 03 8D 13 00 AD 2A 03 8D 14 00 AD 2B 03 8D 15 00 AD 2C 03 8D 16 00 AD 2D 03 8D 17 00 AD 03 00 20 EF FF AD 04 00 20 EF FF AD 05 00 20 EF FF AD 06 00 20 EF FF AD 07 00 20 EF FF AD 08 00 20 EF FF AD 09 00 20 EF FF AD 0A 00 20 EF FF AD 0B 00 20 EF FF AD 0C 00 20 EF FF AD 0D 00 20 EF FF AD 0E 00 20 EF FF AD 0F 00 20 EF FF AD 10 00 20 EF FF AD 11 00 20 EF FF AD 12 00 20 EF FF AD 13 00 20 EF FF AD 14 00 20 EF FF AD 15 00 20 EF FF AD 16 00 20 EF FF AD 17 00 20 EF FF 00 A9 00 8D 16 03 AD 16 03 C9 14 F0 04 A9 01 D0 02 A9 00 C9 00 D0 03 4C 6D 09 AD 16 03 AA C9 15 90 0A A9 45 20 EF FF A9 49 4C 79 09 20 6E 09 8D 24 03 AD 24 03 9D 00 03 8D 31 00 AD 16 03 AA C9 15 90 0A A9 45 20 EF FF A9 49 4C 79 09 BD 00 03 CD 15 03 D0 04 A9 01 D0 02 A9 00 C9 00 D0 08 A9 01 8D 25 03 4C 63 09 A9 00 8D 25 03 4C 6D 09 AE 16 03 E8 8E 16 03 4C FA 08 60 AD 11 D0 10 FB AD 10 D0 29 7F 60 20 EF FF 00 ",
-                compile_only=True
+                stdin_test="FIRST LINE INPUT     LINE2\r",
+                output="FIRST LINE INPUT     LINE2\n" # the \r on emulator is replace by \n
             )
         )
     else:
@@ -948,8 +945,8 @@ try:
         Test(
             "Input test",
             code=".i = input:;print: .i;",
-            compile_output="0400: 20 13 04 8D 01 03 AD 01 03 8D 00 03 AD 00 03 20 EF FF 00 AD 11 D0 10 FB AD 10 D0 29 7F 60 ",
-            compile_only=True,
+            stdin_test="A",
+            output="A"
         ),
         Test(
             "If test",
@@ -1349,7 +1346,6 @@ try:
         #            print: 'A';
         #        }
         #    """,
-        #    timeout=2
         #),
         Test(
             "Simple while test",
@@ -1365,7 +1361,6 @@ try:
                 }
             """,
             output="12345",
-            timeout=5
         ),
         Test(
             "Break in while",
@@ -1376,7 +1371,6 @@ try:
                 }
             """,
             output="TEST",
-            timeout=5
         ),
         Test(
             "Continue in while",
@@ -1391,7 +1385,6 @@ try:
                 }
             """,
             output="TEST1",
-            timeout=5
         )
     )
 
@@ -1640,52 +1633,54 @@ try:
             ],
             output="FUNCTION MODULEASTRING"
         ),
-        #ModuleTest(
-        #    "Function with variable on module - 2", # on this test, press only A
-        #    code_modules=[
-        #        (
-        #            "test.sma",
-        #            """
-        #                import "test/readkeys.sma";
-        #                ~str = "STRING";
-#
- #                       readkeys: ~str, False;
-#
- #                       print: ~str;
-#
-  #                  """
-   #             ),
-    #            (
-     #               "readkeys.sma",
-      #              """
-       #                 void readkeys: *~line, .end {;
-        #                .counter = 0;
-         #               while .counter != 20 {;
-          #                  ~line[.counter] = input:;
-#
- #                           if ~line[.counter] == .end {;
-  #                              break;
-   #                         }
-#
- #                           .counter++;
-  #                      }
-   #                 }
-    #                """
-     #           )
-      #      ],
-       #     output="A" * 21
-        #)
+        ModuleTest(
+            "Function with variable on module - 2", # on this test, press only A
+            code_modules=[
+                (
+                    "test.sma",
+                   """
+                       import "test/readkeys.sma";
+                       ~str = "STRING";
 
-        #ModuleTest(    # uncomment for set the test. But this test have a long output
-        #    "Self import test",
-        #    code_modules=[
-        #        (
-        #            "test.sma",
-        #            'import "test/test.sma";'
-        #        )
-        #    ],
-        #    sucess=False
-        #)
+                       readkeys: ~str, False;
+
+                       print: ~str;
+
+                   """
+               ),
+               (
+                   "readkeys.sma",
+                   """
+                       void readkeys: *~line, .end {;
+                       .counter = 0;
+                       while .counter != 21 {;
+                           ~line[.counter] = input:;
+
+                           if ~line[.counter] == .end {;
+                               break;
+                           }
+
+                           .counter++;
+                       }
+                   }
+                   """
+               )
+           ],
+           output="A" * 21,
+           stdin_test="A" * 21
+        ),
+
+        ModuleTest(
+            "Self import test",
+            code_modules=[
+                (
+                   "test.sma",
+                   'import "test/test.sma";'
+               )
+           ],
+           sucess=False,
+           no_log=True
+        )
     )
 
     FUNCTION_TEST = (
@@ -1829,7 +1824,6 @@ try:
                     print: ~string;
                     print: .x + .a;
                     print: .a + 65;
-
                 }
 
                 f: 'A', "STRING", 1;
@@ -2287,6 +2281,15 @@ OK2"""
             compile_only=True,
             compile_output="0400: A9 4F 20 EF FF A9 4B 20 EF FF 4C 00 04 00 AD 11 D0 10 FB AD 10 D0 29 7F 60 "
         ),
+        Test(
+            "Input without return",
+            code="""
+                input:;
+                print: "OK";
+            """,
+            stdin_test="A",
+            output="OK"
+        ),
         # --- error ---
         Test(
             "Bad hex on asm_entry",
@@ -2307,7 +2310,7 @@ OK2"""
             "Bad arg on input",
             code=".a = input: 'A';",
             sucess=False,
-            compile_only=True
+            stdin_test="E", # security if the compilation don't fail
         ),
         Test(
             "Bad arg on restart",
@@ -2595,24 +2598,24 @@ OK2"""
         Test(
             "Call a function with long time",  # this test have probleme
             code="""
-                //void f{;
-                //    for .i in |0|10|1| {;
-                //        print: 'A';
-                //    }
-                //}
-                //void g{;
-                //    for .i in |0|10|1| {;
-                //        print: 'B';
-                //    }
-                //}
+                void f{;
+                    for .i in |0|10|1| {;
+                        print: 'A';
+                    }
+                }
+                void g{;
+                    for .i in |0|10|1| {;
+                        print: 'B';
+                   }
+                }
 
-                //thread stack{;
-                //    f:;
-                //}
+                thread stack{;
+                    f:;
+                }
 
-                //g:;
+                g:;
             """,
-            output="error" # this test have probleme
+            output="A" * 10 + "B" * 10 # this test have probleme
         ),
         # --- error ---
         Test(
@@ -2805,6 +2808,38 @@ OK2"""
                 print: .c;
             """,
             output="1HELLOANEW STRING@"
+        ),
+        Test(
+            "Recurcive pointer - 1",
+            code="""
+                void f1: *.arg1{;
+                    .arg1 = 'A';
+                }
+                void f2: *.arg2{;
+                    f1: .arg2;
+                }
+
+                .a = 0;
+                f2: .a;
+                print: .a;
+            """,
+            output="A"
+        ),
+        Test(
+            "Recurcive pointer - 2",
+            code="""
+                void f1: *~arg1{;
+                    ~arg1 = "FUNCTION1";
+                }
+                void f2: *~arg2{;
+                    f1: ~arg2;
+                }
+
+                ~string = "STRING";
+                f2: ~string;
+                print: ~string;
+            """,
+            output="FUNCTION1"
         ),
         # --- error ---
         Test(

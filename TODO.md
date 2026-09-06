@@ -23,8 +23,9 @@ If the task is a bug you can also add an issue on GitHub.
 - Better threading: fix some problems with no shared stack + add some tests
 - On thread, add swith when a print beetween all character + add a swith on the input (the loop of input)
 - On math, add parentheses `(1+2)*3`
-- Test: add new test for the new library: add the path to constent LIB_PATH on test.py
 - On the library input, add new features: set a readline with print character, add a clear string (clear the string when the end is `\r` for exemple) on end mode...
 - On string library, add count, replace, in...
-- Test: add test for recurcive function with arg on ptr
-- On test, for the input test, add stdin file (maybe use subprocess.run or make new feature on smart eumlator)
+- Fix: if a ptr function call anthoer ptr function with the same argument named, error
+- Add new test with using timeout: while True test... And add option for when the time is out, the output is given and test if the output is correct
+- Add a `compiletime checkversion x.y.z`: the minimum vertion needed for compile.
+- On `make_variable` function, add a control if the var already exist: raise SmartError.

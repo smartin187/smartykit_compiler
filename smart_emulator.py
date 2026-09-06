@@ -240,6 +240,16 @@ if __name__ == "__main__":
 
 START_RAM = 0
 
+stdin_6502 = {
+    "stdin": False, # if a stdin is used
+    "text": "",     # the text of stdin
+    "read": 0       # the reading character
+}
+
+op_run = 0 # the number of opreation already run
+max_op_run = 0 # the maximum opreation
+
+
 if GUI_MODE:
 
     window_emulator = tk.Tk()
@@ -765,6 +775,18 @@ BASE_FLAGS = {
 
 flags = dict(BASE_FLAGS)
 
+class EmulatorError(Exception):
+    """Errro about the emulator, used by test.py"""
+    pass
+
+class EmulatorStdinError(EmulatorError):
+    """Error when try to read a character on given stdin for test but the stdin is end."""
+    pass
+
+class EmulatorMaxOPError(EmulatorError):
+    """Error when the maximum number of operations is reached. By default: 10000"""
+    pass
+
 def error_during_run() -> None:
     """Print an error message on the monitor."""
     print_on_text("\nError occurred during run...", True, True)
@@ -819,7 +841,7 @@ def get_from_stack() -> str:
 
 def run_smart() -> None:
     """Run smart code."""
-    global code, ram, accumulator, flags, run_step, end_run
+    global code, ram, accumulator, flags, run_step, end_run, op_run
 
     code = code.split(" ")
 
@@ -836,9 +858,14 @@ def run_smart() -> None:
 
     run_fail = False
 
-    return_ardess = 0
+    #return_ardess = 0
 
     while run_step < len(code):
+
+        if max_op_run:
+            op_run += 1
+            if op_run >= max_op_run:
+                raise EmulatorMaxOPError("Maximum operation run reached.")
 
         if stop_run:
             break
@@ -855,29 +882,37 @@ def run_smart() -> None:
             continue
 
         if " ".join(code[run_step:run_step + 7]) == "10 FB AD 10 D0 29 7F":     # special code:
-            if GUI_MODE:
-                var_info_run.set("The programme is waiting for a key...")
-                while ram["D011"] == "00":
-                    sleep(0.1)        # wait for a key
+            if not stdin_6502["stdin"]:
+                if GUI_MODE:
+                    var_info_run.set("The programme is waiting for a key...")
+                    while ram["D011"] == "00":
+                        sleep(0.1)        # wait for a key
 
-                var_info_run.set("")
+                    var_info_run.set("")
 
-                ram["D011"] = "00"
-                accumulator["A"] = ram["D010"]
+                    ram["D011"] = "00"
+                    accumulator["A"] = ram["D010"]
+
+                else:
+                    sys.stdout.write(Colors.BG_GREEN)
+                    key = input()
+
+                    sys.stdout.write(Colors.RESET + "\x1b[K")
+                    sys.stdout.flush()
+
+
+                    if len(key) != 1:
+                        MessageUser.show_error("Error", "You must enter a single character.")
+
+                    accumulator["A"] = hex(ord(key))[2:].upper().zfill(2)
 
             else:
-                sys.stdout.write(Colors.BG_GREEN)
-                key = input()
+                try:
+                    accumulator["A"] = hex(ord(stdin_6502["text"][stdin_6502["read"]]))[2:].upper().zfill(2)
+                    stdin_6502["read"] += 1
 
-                sys.stdout.write(Colors.RESET + "\x1b[K")
-                sys.stdout.flush()
-
-
-                if len(key) != 1:
-                    MessageUser.show_error("Error", "You must enter a single character.")
-
-                accumulator["A"] = hex(ord(key))[2:].upper().zfill(2)
-
+                except IndexError:
+                    raise EmulatorStdinError("stdin end error")
 
             run_step += 7
 
@@ -1290,9 +1325,9 @@ if __name__ == "__main__":
 
 
 
-def start_test(test_code:str) -> str:
+def start_test(test_code:str, max_op:int, stdin:str | None = None) -> str:
     """Used by test.py to test a functionality."""
-    global code, ram, accumulator, flags, run_step, end_run, output_test, no_wozm, stack_ptr, stop_run
+    global code, ram, accumulator, flags, run_step, end_run, output_test, no_wozm, stack_ptr, stop_run, op_run, max_op_run
 
     # reset value:
     run_step = 0
@@ -1300,6 +1335,8 @@ def start_test(test_code:str) -> str:
     no_wozm = True
     stack_ptr = STACK_PTR
     stop_run = _STOP_RUN
+    max_op_run = max_op
+    op_run = 0
 
     ram = dict(BASE_RAM)
     accumulator = dict(BASE_ACCUMULATOR)
@@ -1309,7 +1346,14 @@ def start_test(test_code:str) -> str:
 
     output_test = ""
 
+    stdin_6502["read"] = 0
+    if stdin is None:
+        stdin_6502["stdin"] = False
+        stdin_6502["text"] = ""
 
+    else:
+        stdin_6502["stdin"] = True
+        stdin_6502["text"] = stdin
 
     run_smart()
 
