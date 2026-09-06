@@ -112,8 +112,8 @@ def compile_smart(
         """Return the hex code for the for loop. The code is used to increment the counter. Return start_loop_for."""
         nonlocal address_counter, code_compile, adress_var, smart_var
         for i in range(3):  # the address for counting
-            compiller_data_run.not_used_ram += 1
-            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAMFor{compiller_data_run.not_used_ram}")
+            compiller_data_run.not_used_for += 1
+            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAMFor{compiller_data_run.not_used_for}")
 
         adress_start_number = adress_for_RAM(adress_var - 1)
         adress_end = adress_for_RAM(adress_var - 2)
@@ -907,6 +907,9 @@ def compile_smart(
         else:
             adress_var += 1
 
+        if var_name in smart_var:
+            raise SmartError(f"Variable '{var_name}' already exist. You can't name a new object with this name.")
+
         smart_var[var_name] = var_obj
 
         if adress_var >= compiller_data_run.MAX_VARIABLE_CREATED + compiller_data_run.START_ADRESS_VAR:
@@ -1001,7 +1004,7 @@ def compile_smart(
     else:
         smart_var = smart_var_module
 
-    adress_var = compiller_data_run.START_ADRESS_VAR + len(smart_var) # esce que les notusedram sont bien mis pour l'appèle de fonction ?
+    adress_var = compiller_data_run.START_ADRESS_VAR + len(smart_var)
 
     line_counter = 0
 
@@ -1206,11 +1209,14 @@ def compile_smart(
                     smart_error(f"Used index in undefined variable: `{var_name}`")
 
                 make_variable(smart_obj.SmartStr(var_name, adress_var), add_adress_advenced_value=False)
-                #adress_var += 1
+
+                #compiller_data_run.not_used_ram += 1
 
                 for i in range(smart_obj.SIZE_ADVANCED_OBJ - 1):
-                    make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i}")
                     compiller_data_run.not_used_ram += 1
+                    make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{compiller_data_run.not_used_ram}")
+
+                compiller_data_run.not_used_ram += 1
 
 
             if not index_mode:  # set a str value on variable
@@ -1271,10 +1277,11 @@ def compile_smart(
 
             jump_line = bloc_line - line_counter - 1
 
-            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAMCallElse{compiller_data_run.not_used_call_else}")
             compiller_data_run.not_used_call_else += 1
+            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAMCallElse{compiller_data_run.not_used_call_else}")
 
-            call_else_adress = adress_for_RAM(get_variable(f"NotUsedRAMCallElse{compiller_data_run.not_used_call_else - 1}", special_name=True).adress) + " "
+
+            call_else_adress = adress_for_RAM(get_variable(f"NotUsedRAMCallElse{compiller_data_run.not_used_call_else}", special_name=True).adress) + " "
 
             adress_var += 1
 
@@ -1700,9 +1707,15 @@ def compile_smart(
                         make_variable(parameter_obj, add_adress_advenced_value=False)
                         parameters_obj.append(parameter_obj)
 
+                        #compiller_data_run.not_used_ram += 1
+
+
+
                         for i in range(smart_obj.SIZE_ADVANCED_OBJ - 1):
-                            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i + compiller_data_run.not_used_ram}")
                             compiller_data_run.not_used_ram += 1
+                            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{compiller_data_run.not_used_ram}")
+
+                        compiller_data_run.not_used_ram += 1
 
                     else:
                         smart_error(f"Expected a variable name, not '{parameter}'")

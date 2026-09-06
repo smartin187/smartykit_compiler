@@ -1360,6 +1360,16 @@ try:
                 }
             """,
             sucess=False
+        ),
+        Test(
+            "Variable on for loop already exist",
+            code="""
+                .i = 0;
+                for .i in |0|10|1| {;
+                    print: "ERROR";
+                }
+            """,
+            sucess=False
         )
     )
 
@@ -1663,32 +1673,32 @@ try:
             code_modules=[
                 (
                     "test.sma",
-                   """
-                       import "test/readkeys.sma";
-                       ~str = "STRING";
+                    """
+                        import "test/readkeys.sma";
+                        ~str = "STRING";
 
-                       readkeys: ~str, False;
+                        readkeys: ~str, False;
 
-                       print: ~str;
+                        print: ~str;
 
-                   """
+                    """
                ),
                (
-                   "readkeys.sma",
-                   """
-                       void readkeys: *~line, .end {;
-                       .counter = 0;
-                       while .counter != 21 {;
-                           ~line[.counter] = input:;
+                    "readkeys.sma",
+                    """
+                        void readkeys: *~line, .end {;
+                            .counter = 0;
+                            while .counter != 21 {;
+                                ~line[.counter] = input:;
 
-                           if ~line[.counter] == .end {;
-                               break;
-                           }
+                                if ~line[.counter] == .end {;
+                                    break;
+                                }
 
-                           .counter++;
-                       }
-                   }
-                   """
+                                .counter++;
+                            }
+                        }
+                    """
                )
            ],
            output="A" * 21,
@@ -1921,6 +1931,19 @@ try:
                 }
             """,
             sucess=False
+        ),
+        Test(
+            "Parameter of function with smae name as variable error",
+            code="""
+                .a = 0;
+
+                void f: .a {;
+                    print: "ERROR";
+                }
+
+                print: "ERROR";
+            """,
+            sucess=False
         )
     )
 
@@ -2062,15 +2085,15 @@ OK2"""
 
                 print: "STOP THREAD";
 
-                for .i in |0|10|1| {;
-                    print: .i + '0';
+                for .j in |0|10|1| {;
+                    print: .j + '0';
                 }
             """,
             output="A0A1A2A3A4A5A6A7A8A9AASTOP THREAD0123456789"
         ),
         Test(
             "compiletime start and stop some thread",
-            """
+            "".join("""
                 thread nostack {;
                     while True{;
                         print: "A";
@@ -2085,10 +2108,10 @@ OK2"""
 
                 print: "STOP THREAD";
 
-                for .i in |0|10|1| {;
-                    print: .i + '0';
+                for .j in |0|10|1| {;
+                    print: .j + '0';
                 }
-            """ * 10,
+            """.replace(".j", f".j{i}").replace(".i", f".i{i}") for i in range(10)),
             output="A0A1A2A3A4A5A6A7A8A9AASTOP THREAD0123456789" * 10
         ),
         # checkversion
@@ -2672,7 +2695,7 @@ OK2"""
                     }
                 }
                 void g{;
-                    for .i in |0|10|1| {;
+                    for .j in |0|10|1| {;
                         print: 'B';
                    }
                 }
@@ -2919,6 +2942,21 @@ OK2"""
                     print: "ERROR";
                 }
                 f: 0, "HELLO";
+            """,
+            sucess=False
+        ),
+        Test(
+            "2 ptr argument with same name error",
+            code="""
+                void f: *.x {;
+                    .x = 'A';
+                }
+
+                void g: *.x {;
+                    f: .x;
+                    print: "ERROR";
+                }
+                print: "ERROR";
             """,
             sucess=False
         )
