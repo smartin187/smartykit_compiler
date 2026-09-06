@@ -1663,32 +1663,32 @@ try:
             code_modules=[
                 (
                     "test.sma",
-                   """
-                       import "test/readkeys.sma";
-                       ~str = "STRING";
+                    """
+                        import "test/readkeys.sma";
+                        ~str = "STRING";
 
-                       readkeys: ~str, False;
+                        readkeys: ~str, False;
 
-                       print: ~str;
+                        print: ~str;
 
-                   """
+                    """
                ),
                (
-                   "readkeys.sma",
-                   """
-                       void readkeys: *~line, .end {;
-                       .counter = 0;
-                       while .counter != 21 {;
-                           ~line[.counter] = input:;
+                    "readkeys.sma",
+                    """
+                        void readkeys: *~line, .end {;
+                            .counter = 0;
+                            while .counter != 21 {;
+                            ~line[.counter] = input:;
 
-                           if ~line[.counter] == .end {;
-                               break;
-                           }
+                            if ~line[.counter] == .end {;
+                                break;
+                            }
 
-                           .counter++;
-                       }
-                   }
-                   """
+                            .counter++;
+                        }
+                    }
+                    """
                )
            ],
            output="A" * 21,
