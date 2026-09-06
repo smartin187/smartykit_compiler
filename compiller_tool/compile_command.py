@@ -10,6 +10,7 @@ from compiller_tool.compiller_data_run import reset_define
 from compiller_tool import compiller_data_run
 from compiller_tool.string_tool import good_variable_name, get_str
 from compiller_tool.color_tool import Colors
+from compiller_tool.smart_info import SMART_VERSION
 
 define = {}     # the define are stored in this dict
 
@@ -125,6 +126,25 @@ def compiletime_command(line:str, smart_var:dict, thread_mode:list[bool, str, bo
 
         logging.warning("A thread was stopped by the 'killthread' compiletime command. Use this command with carfull.")
         thread_mode[0] = False
+
+    elif line.startswith("checkversion "): # control the minimum version for compile
+        base_version = line[len("checkversion "):].replace(" ", "")
+        try:
+            major, minor, patch = map(int, base_version.split("."))
+        except:
+            raise SmartError(f"Invalid syntax after 'checkversion': expected x.y.z, not '{base_version}'.")
+
+        smart_major, smart_minor, smart_patch = map(int, SMART_VERSION[1:].split("."))
+
+        if (smart_major, smart_minor, smart_patch) < (major, minor, patch):
+            logging.error(f"Error: Smart version required is {major}.{minor}.{patch}, but current version is {SMART_VERSION}. Please update Smart. You can continue compilation, but risk of error.")
+            if input("Continue ? (y/N): ").replace(" ", "").lower() != "y":
+                raise SmartError(f"Compilation stopped due to version check.")
+
+            logging.warning("Compilation continue, but the version of compiller is not compatible with required version. Please update Smart.")
+
+        else:
+            logging.info(f"Compiletime checkversion ok: the current version of Smart ({SMART_VERSION}) is compatible with the required version ({major}.{minor}.{patch}).")
 
     else:
         raise SmartError("Expected keyword after 'compiletime'.")
