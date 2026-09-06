@@ -74,6 +74,8 @@ _NOT_USED_CALL_ELSE = 0
 
 _DEBUG_MAX = False  # if debug is True, the running line is printed in the binary.
 
+_NOT_USED_FOR = 0
+
 # -------------------------------
 
 _define_dict = None
@@ -86,13 +88,14 @@ def reset_define(define_dict:dict) -> None:
 def reset_data() -> None:
     """Reset the data.
     Used for test.py (because tests are run one after the other)."""
-    global warning_endline, not_used_ram, need_error, double_space_error, not_used_call_else, debug_max
+    global warning_endline, not_used_ram, need_error, double_space_error, not_used_call_else, debug_max, not_used_for
     warning_endline = _WARNING_ENDLINE
     not_used_ram = _NOT_USED_RAM
     need_error = _NEED_ERROR
     double_space_error = _DOUBLE_SPACE_ERROR
     not_used_call_else = _NOT_USED_CALL_ELSE
     debug_max = _DEBUG_MAX
+    not_used_for = _NOT_USED_FOR
 
     # reset value of compiletime keyword
     _define_dict.clear()
@@ -104,6 +107,8 @@ warning_endline = _WARNING_ENDLINE
 not_used_call_else = _NOT_USED_CALL_ELSE
 
 not_used_ram = _NOT_USED_RAM
+
+not_used_for = _NOT_USED_FOR
 
 need_error = _NEED_ERROR
 

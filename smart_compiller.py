@@ -112,8 +112,8 @@ def compile_smart(
         """Return the hex code for the for loop. The code is used to increment the counter. Return start_loop_for."""
         nonlocal address_counter, code_compile, adress_var, smart_var
         for i in range(3):  # the address for counting
-            compiller_data_run.not_used_ram += 1
-            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAMFor{compiller_data_run.not_used_ram}")
+            compiller_data_run.not_used_for += 1
+            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAMFor{compiller_data_run.not_used_for}")
 
         adress_start_number = adress_for_RAM(adress_var - 1)
         adress_end = adress_for_RAM(adress_var - 2)
