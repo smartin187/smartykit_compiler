@@ -1212,8 +1212,10 @@ def compile_smart(
                 #adress_var += 1
 
                 for i in range(smart_obj.SIZE_ADVANCED_OBJ - 1):
-                    make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i}")
                     compiller_data_run.not_used_ram += 1
+                    make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i + compiller_data_run.not_used_ram}")
+
+                compiller_data_run.not_used_ram += 1
 
 
             if not index_mode:  # set a str value on variable
