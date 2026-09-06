@@ -2062,8 +2062,8 @@ OK2"""
 
                 print: "STOP THREAD";
 
-                for .i in |0|10|1| {;
-                    print: .i + '0';
+                for .j in |0|10|1| {;
+                    print: .j + '0';
                 }
             """,
             output="A0A1A2A3A4A5A6A7A8A9AASTOP THREAD0123456789"
@@ -2085,8 +2085,8 @@ OK2"""
 
                 print: "STOP THREAD";
 
-                for .i in |0|10|1| {;
-                    print: .i + '0';
+                for .j in |0|10|1| {;
+                    print: .j + '0';
                 }
             """ * 10,
             output="A0A1A2A3A4A5A6A7A8A9AASTOP THREAD0123456789" * 10
@@ -2672,7 +2672,7 @@ OK2"""
                     }
                 }
                 void g{;
-                    for .i in |0|10|1| {;
+                    for .j in |0|10|1| {;
                         print: 'B';
                    }
                 }
