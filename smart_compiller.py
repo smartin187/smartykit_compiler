@@ -1214,7 +1214,7 @@ def compile_smart(
 
                 for i in range(smart_obj.SIZE_ADVANCED_OBJ - 1):
                     compiller_data_run.not_used_ram += 1
-                    make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i + compiller_data_run.not_used_ram}")
+                    make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{compiller_data_run.not_used_ram}")
 
                 compiller_data_run.not_used_ram += 1
 
@@ -1709,9 +1709,11 @@ def compile_smart(
 
                         #compiller_data_run.not_used_ram += 1
 
+
+
                         for i in range(smart_obj.SIZE_ADVANCED_OBJ - 1):
                             compiller_data_run.not_used_ram += 1
-                            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{i + compiller_data_run.not_used_ram}")
+                            make_variable(smart_obj.ReservedAdress(adress_var), name=f"NotUsedRAM{compiller_data_run.not_used_ram}")
 
                         compiller_data_run.not_used_ram += 1
 
