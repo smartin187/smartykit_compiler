@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import sys
 
-from compiller_tool.smart_exception import ModuleError
+from compiller_tool.smart_exception import ModuleError, CompileError
 from compiller_tool.color_tool import Colors
 
 compile_smarty = None
@@ -62,7 +62,7 @@ def get_module(path:str, start_adress:int, var_module:dict) -> ModuleInfo:
         return module_info
 
     except RecursionError:
-        raise ModuleError("Error during compiling module. Maybe a module have import it?", recursion=True, module_name=path)
+        raise CompileError(f"Error during compiling module: max recursion. Maybe a module have import it?\n\nOn '{path}' module.")
 
 def import_module(file_name:str, start_adress:int, no_error:bool=False, module_var:dict={}) -> ModuleInfo:
     """Import a module from name (path can be relative or absolute)."""
