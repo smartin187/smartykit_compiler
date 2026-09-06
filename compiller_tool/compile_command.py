@@ -143,6 +143,9 @@ def compiletime_command(line:str, smart_var:dict, thread_mode:list[bool, str, bo
 
             logging.warning("Compilation continue, but the version of compiller is not compatible with required version. Please update Smart.")
 
+        else:
+            logging.info(f"Compiletime checkversion ok: the current version of Smart ({SMART_VERSION}) is compatible with the required version ({major}.{minor}.{patch}).")
+
     else:
         raise SmartError("Expected keyword after 'compiletime'.")
 

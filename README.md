@@ -284,6 +284,8 @@ compiletime checkversion 0.0.0;
 
 If the version of compiller is smaller than the version test, the compiller show a error message and the user can choose to continue or not the compilation (`y/n` question).
 
+If the version is compatible, the compiller show a log info message for confirm the version is compatible.
+
 > It can be helpful on library: you can control if the minimum version for your library is good for compile the code.
 
 #### Variables
